@@ -19,44 +19,44 @@ var i;
 var contractor_rates = {};
 
 for (i=2; i<=43; i++) {
-	if (workbook.Sheets.Rates['A' + i] && workbook.Sheets.Rates['C' + i]) {
-		contractor_rates[workbook.Sheets.Rates['A' + i].v] = workbook.Sheets.Rates['C' + i].v;
-	}
+  if (workbook.Sheets.Rates['A' + i] && workbook.Sheets.Rates['C' + i]) {
+    contractor_rates[workbook.Sheets.Rates['A' + i].v] = workbook.Sheets.Rates['C' + i].v;
+  }
 }
 
 
 projects.list({}, function(err, projects) {
-	_.each(projects, function(project, index) {
-		projects_colab.push({
-			name: project.name,
-			id:project.project_id
-		});
-	});
+  _.each(projects, function(project, index) {
+    projects_colab.push({
+      name: project.name,
+      id:project.project_id
+    });
+  });
 
-	async.eachSeries(projects_colab, function(project, cb) {
-		project.contractors = {};
-		time_entry.list({ project_id: project.id, date_from:'2015-01-27', date_to:'2015-01-28'}, function(err, entries) {
-			var total = 0;
-			async.eachSeries(entries, function(entry, callback) {
-				staff.get(entry.staff_id, function(err, staff) {
-					staff.name = staff.first_name + ' ' + staff.last_name;
-					if (!project.contractors[staff.name]) {
-						project.contractors[staff.name] = {
-							'CoLab Cost': 0,
-							hours: 0
-						}
-					}
-					project.contractors[staff.name].hours += parseFloat(entry.hours)
-					project.contractors[staff.name]['CoLab Cost'] += parseFloat(entry.hours) * parseFloat(contractor_rates[staff.name]);
-					callback();
-				});
-			}, function(err, result) {
-				cb();
-			});
-		});
-	}, function(err, result) {
-		console.log(JSON.stringify(projects_colab))
-	});
+  async.eachSeries(projects_colab, function(project, cb) {
+    project.contractors = {};
+    time_entry.list({ project_id: project.id, date_from:'2015-01-27', date_to:'2015-01-28'}, function(err, entries) {
+      var total = 0;
+      async.eachSeries(entries, function(entry, callback) {
+        staff.get(entry.staff_id, function(err, staff) {
+          staff.name = staff.first_name + ' ' + staff.last_name;
+          if (!project.contractors[staff.name]) {
+            project.contractors[staff.name] = {
+              'CoLab Cost': 0,
+              hours: 0
+            }
+          }
+          project.contractors[staff.name].hours += parseFloat(entry.hours)
+          project.contractors[staff.name]['CoLab Cost'] += parseFloat(entry.hours) * parseFloat(contractor_rates[staff.name]);
+          callback();
+        });
+      }, function(err, result) {
+        cb();
+      });
+    });
+  }, function(err, result) {
+    console.log(JSON.stringify(projects_colab))
+  });
 
 });
 
